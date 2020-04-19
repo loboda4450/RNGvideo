@@ -11,25 +11,10 @@ from math import log, e
 import matplotlib.pyplot as plotter
 
 
-def get_seed_from_pixel():
-    video = cv2.VideoCapture('video_sample.mp4')
-    w, h = int(video.get(3)), int(video.get(4))
-    frames = []
-    success, image = video.read()
+def get_seed_from_pixel(frame, w, h):
+    width, height = int(time.time() * 1000 % w), int(time.time() * 1000 % h)
 
-    while success:
-        success, image = video.read()
-        try:
-            frames.append(image)
-        except Exception as e:
-            pass
-
-    frame_num, width, height = int(time.time() * 1000 % len(frames)), int(time.time() * 1000 % w), int(
-        time.time() * 1000 % h)
-
-    video.release()
-
-    return int(sum(frames[frame_num][height][width]) / len(frames[frame_num][height][width]))
+    return int(sum(frame[height][width]) / len(frame[height][width]))
 
 
 def entropy_handler(random_array, base=None):
@@ -53,12 +38,12 @@ def entropy_handler(random_array, base=None):
     return entropy
 
 
-def worker(length, rnd_range, threads):
+def worker(frame, w, h, length, rnd_range, threads):
     primes = Primes.Primes()
     rng = RNGutils.RNGutils()
 
     with open("output.txt", "a+") as file:
-        seed = get_seed_from_pixel()
+        seed = get_seed_from_pixel(frame=frame, w=w, h=h)
         [file.write(f'{number}\n') for number in
          rng.sequence(primes=primes, pixel_seed=seed, length=int(length / threads), rnd_range=rnd_range)]
 
@@ -77,9 +62,13 @@ def main():
     if sys.argv[1] == "--sequence":
         start = time.time()
         processes = []
+        video = cv2.VideoCapture('video_sample.mp4')
+        w, h = int(video.get(3)), int(video.get(4))
 
         for i in range(int(sys.argv[4])):
-            p = multiprocessing.Process(target=worker, args=(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),))
+            video.set(1, time.time() * 1000 % cv2.CAP_PROP_FRAME_COUNT)
+            res, frame = video.read()
+            p = multiprocessing.Process(target=worker, args=(frame, w, h, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),))
             processes.append(p)
             p.start()
 
