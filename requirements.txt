@@ -1,5 +1,4 @@
 matplotlib
-PIL
-time
-cv2
+pillow
+opencv-python
 numpy
