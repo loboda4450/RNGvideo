@@ -66,7 +66,7 @@ def main():
         w, h = int(video.get(3)), int(video.get(4))
 
         for i in range(int(sys.argv[4])):
-            video.set(1, time.time() * 1000 % cv2.CAP_PROP_FRAME_COUNT)
+            video.set(cv2.CAP_PROP_POS_FRAMES, time.time() * 1000 % video.get(cv2.CAP_PROP_FRAME_COUNT))
             res, frame = video.read()
             p = multiprocessing.Process(target=worker, args=(frame, w, h, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),))
             processes.append(p)
